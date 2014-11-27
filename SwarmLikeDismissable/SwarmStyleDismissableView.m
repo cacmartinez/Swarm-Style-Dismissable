@@ -88,8 +88,8 @@
     
     
     
-    if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewManualTraslationDidStart)]) {
-        [self.delegate swarmDismissableViewManualTraslationDidStart];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewManualTraslationDidStart:)]) {
+        [self.delegate swarmDismissableViewManualTraslationDidStart:self];
     }
     
     if (self.locationReferenceView) {
@@ -147,20 +147,35 @@
     return percentage;
 }
 
+- (CGFloat)angleBetweenPoint:(CGPoint)point1 andPoint:(CGPoint)point2{
+    CGFloat xDif = point2.x - point1.x;
+    CGFloat yDif = point2.y - point1.y;
+    yDif = -yDif;
+    CGFloat angle = 0.0;
+    if (yDif > 0) {
+        angle = atan2(yDif, xDif) * (180/M_PI);
+    } else if (yDif <= 0){
+        angle = 360 + atan2(yDif, xDif) * (180/M_PI);
+    }
+    return angle;
+}
+
 - (void)draggingMoved:(UIPanGestureRecognizer *)gesture{
 //    UIView *nondismissingView = self.animator.referenceView.subviews.lastObject;
 //    UIView *pixelView = nondismissingView.subviews.firstObject;
 //    pixelView.center = [self.animator.referenceView convertPoint:gesture.view.center toView:nondismissingView];
     
-    if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewManualTraslationDidMoveWithPercentageToCancel:)]) {
+    if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableView:manualTraslationDidMoveWithPercentageToCancel:angle:)]) {
         CGFloat nonDismissableRadius = (self.nonDismissingRadius)? self.nonDismissingRadius.doubleValue : DEFAULT_RADIUS;
         CGFloat percentage = [self percentageDismissableWithDissmissableRadius:nonDismissableRadius centerReference:gesture.view.center currentViewCenter:self.animator.referenceView.center];
-//        CGPoint nonDismissingFrameOrigin = self.nonDismissingFrame.origin;
-//        CGPoint centerReferenceView = self.animator.referenceView.center;
-//        CGFloat viewDistanceFromCenter = sqrt(pow(gesture.view.center.x - centerReferenceView.x, 2.0)+pow(gesture.view.center.y - centerReferenceView.y, 2.0));
-//        CGFloat nonDismissingFrameDistanceFromCenter = sqrt(pow(nonDismissingFrameOrigin.x - centerReferenceView.x, 2.0)+pow(nonDismissingFrameOrigin.y - centerReferenceView.y, 2.0));
-//        CGFloat percentage = (viewDistanceFromCenter/nonDismissingFrameDistanceFromCenter > 1)? 1 : viewDistanceFromCenter/nonDismissingFrameDistanceFromCenter;
-        [self.delegate swarmDismissableViewManualTraslationDidMoveWithPercentageToCancel:percentage];
+        CGFloat angle = [self angleBetweenPoint:self.animator.referenceView.center andPoint:[self.animator.referenceView.superview convertPoint:gesture.view.center fromView:self.animator.referenceView]];
+        //        CGPoint nonDismissingFrameOrigin = self.nonDismissingFrame.origin;
+        //        CGPoint centerReferenceView = self.animator.referenceView.center;
+        //        CGFloat viewDistanceFromCenter = sqrt(pow(gesture.view.center.x - centerReferenceView.x, 2.0)+pow(gesture.view.center.y - centerReferenceView.y, 2.0));
+        //        CGFloat nonDismissingFrameDistanceFromCenter = sqrt(pow(nonDismissingFrameOrigin.x - centerReferenceView.x, 2.0)+pow(nonDismissingFrameOrigin.y - centerReferenceView.y, 2.0));
+        //        CGFloat percentage = (viewDistanceFromCenter/nonDismissingFrameDistanceFromCenter > 1)? 1 : viewDistanceFromCenter/nonDismissingFrameDistanceFromCenter;
+        
+        [self.delegate swarmDismissableView:self manualTraslationDidMoveWithPercentageToCancel:percentage angle:angle];
     }
     
     CGFloat rotation = atan2(gesture.view.transform.b, gesture.view.transform.a);
@@ -236,14 +251,14 @@
         [self.animator removeBehavior:self.attachment];
         gesture.view.userInteractionEnabled = NO;
         
-        if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewWillStartDismissAnimationWithDynamics)]) {
-            [self.delegate swarmDismissableViewWillStartDismissAnimationWithDynamics];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewWillStartDismissAnimationWithDynamics:)]) {
+            [self.delegate swarmDismissableViewWillStartDismissAnimationWithDynamics:self];
         }
         [self performSelector:@selector(checkForFinishedDismissingView) withObject:nil afterDelay:0.1];
     } else { //view should be put back in it's original position
         
-        if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewCanceledDismissWithDynamics)]) {
-            [self.delegate swarmDismissableViewCanceledDismissWithDynamics];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewCanceledDismissWithDynamics:)]) {
+            [self.delegate swarmDismissableViewCanceledDismissWithDynamics:self];
         }
         
         UIView *view = self.animator.referenceView;
@@ -254,15 +269,15 @@
             cancelDuration = self.cancelAnimationDuration.doubleValue;
         }
         
-        if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewWillStartDismissCancelAnimationWithDuration:)]) {
-            [self.delegate swarmDismissableViewWillStartDismissCancelAnimationWithDuration:cancelDuration];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableView:willStartDismissCancelAnimationWithDuration:)]) {
+            [self.delegate swarmDismissableView:self willStartDismissCancelAnimationWithDuration:cancelDuration];
         }
         [UIView animateWithDuration:cancelDuration animations:^{
             gesture.view.center = view.center;
             gesture.view.transform = CGAffineTransformIdentity;
         } completion:^(BOOL finished) {
-            if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewDidFinishDismissCancelAnimation)]) {
-                [self.delegate swarmDismissableViewDidFinishDismissCancelAnimation];
+            if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewDidFinishDismissCancelAnimation:)]) {
+                [self.delegate swarmDismissableViewDidFinishDismissCancelAnimation:self];
             }
         }];
     }
@@ -276,10 +291,11 @@
     }
     if (!CGRectIntersectsRect(view.frame, [view.superview convertRect:self.frame fromView:view])) {
         self.animator = nil;
-        if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewDidFinishDismissAnimationWithDynamics)]) {
-            [self.delegate swarmDismissableViewDidFinishDismissAnimationWithDynamics];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(swarmDismissableViewDidFinishDismissAnimationWithDynamics:)]) {
+            [self.delegate swarmDismissableViewDidFinishDismissAnimationWithDynamics:self];
         }
-        [self removeFromSuperview];
+        self.userInteractionEnabled = YES;
+        //[self removeFromSuperview];
     } else {
         [self performSelector:@selector(checkForFinishedDismissingView) withObject:nil afterDelay:0.1];
     }

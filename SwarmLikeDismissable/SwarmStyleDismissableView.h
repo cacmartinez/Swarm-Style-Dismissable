@@ -21,16 +21,23 @@
 
 #import <UIKit/UIKit.h>
 
+@class SwarmStyleDismissableView;
+
 @protocol SwarmStyleDismissableViewDelegate <NSObject>
 
 @optional
--(void)swarmDismissableViewWillStartDismissAnimationWithDynamics;
--(void)swarmDismissableViewDidFinishDismissAnimationWithDynamics;
--(void)swarmDismissableViewCanceledDismissWithDynamics;
--(void)swarmDismissableViewWillStartDismissCancelAnimationWithDuration:(CGFloat)duration;
--(void)swarmDismissableViewDidFinishDismissCancelAnimation;
--(void)swarmDismissableViewManualTraslationDidStart;
--(void)swarmDismissableViewManualTraslationDidMoveWithPercentageToCancel:(CGFloat)cancelPercentage;
+-(void)swarmDismissableViewWillStartDismissAnimationWithDynamics:(SwarmStyleDismissableView *)view;
+-(void)swarmDismissableViewDidFinishDismissAnimationWithDynamics:(SwarmStyleDismissableView *)view;
+-(void)swarmDismissableViewCanceledDismissWithDynamics:(SwarmStyleDismissableView *)view;
+-(void)swarmDismissableView:(SwarmStyleDismissableView *)view willStartDismissCancelAnimationWithDuration:(CGFloat)duration;
+-(void)swarmDismissableViewDidFinishDismissCancelAnimation:(SwarmStyleDismissableView *)view;
+-(void)swarmDismissableViewManualTraslationDidStart:(SwarmStyleDismissableView *)view;
+
+/**
+ *
+ * @param angle The angle (degrees) of the current center position of the view in the dismissable circle area
+ */
+-(void)swarmDismissableView:(SwarmStyleDismissableView *)view manualTraslationDidMoveWithPercentageToCancel:(CGFloat)cancelPercentage angle:(CGFloat)angle;
 
 @end
 
